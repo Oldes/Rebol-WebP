@@ -1,4 +1,5 @@
 [![Rebol-WebP CI](https://github.com/Oldes/Rebol-WebP/actions/workflows/main.yml/badge.svg)](https://github.com/Oldes/Rebol-WebP/actions/workflows/main.yml)
+[![Gitter](https://badges.gitter.im/rebol3/community.svg)](https://app.gitter.im/#/room/#Rebol3:gitter.im)
 
 # Rebol/WebP
 
@@ -14,12 +15,6 @@ save %out.webp make image! 640x480 ;; save some image into a file encoded using 
 
 ## Extension commands:
 
-
-#### `webp-init` `:args` `:presets` `:hints`
-
-* `args` `[block!]`
-* `presets` `[block!]`
-* `hints` `[block!]`
 
 #### `encode` `:image`
 Encode an image into WebP format

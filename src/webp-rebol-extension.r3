@@ -255,7 +255,7 @@ arg: clear ""
 cmd: desc: a: t: s: readme: r: none
 parse commands [
 	any [
-		quote init-words: skip
+		quote webp-init: skip ;; skip the internal init command
 		|
 		set cmd: set-word! into [
 			(clear hdr clear arg r: none)
