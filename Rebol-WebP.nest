@@ -133,7 +133,7 @@ eggs: [
 			;@@ CWEBP utility is turned off, because there is some error when it's being compiled!
 			cmd %tmp/macos/ "cmake ../../libwebp/ -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DWEBP_BUILD_CWEBP=OFF -DCMAKE_BUILD_TYPE=Release -DINSTALL_CREATE_DISTRIB=OFF"
 			cmd %tmp/macos/ "cmake --build . --config release -j 8"
-			cmd %tmp/macos/ "cmake --build . --target install --config release"
+			cmd %tmp/macos/ "sudo cmake --build . --target install --config release"
 		]
 		"Rebol WebP extension: macos_x64" [
 			name: %webp-macos-x64
