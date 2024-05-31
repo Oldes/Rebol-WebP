@@ -111,7 +111,7 @@ eggs: [
 			cmd %tmp/x64/ "cmake --build . --target install --config release"
 		]
 		"Rebol WebP extension: win32_x86" [
-			name: %webp-windows-x86.rebx
+			name: %webp-windows-x86
 			:target-x86
 			:make-extension
 			library: %build-x86/lib/libwebp
@@ -119,7 +119,7 @@ eggs: [
 			library: %build-x86/lib/libwebpdemux
 		]
 		"Rebol WebP extension: win32_x64" [
-			name: %webp-windows-x64.rebx
+			name: %webp-windows-x64
 			:target-x64
 			:make-extension
 			library: %build/lib/libwebp
