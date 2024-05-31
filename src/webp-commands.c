@@ -145,7 +145,7 @@ COMMAND cmd_encode(RXIFRM *frm, void *ctx) {
 
 Error:
 	if (picture.error_code > 0) {
-		RXA_SERIES(frm, 1) = picture.error_code >= VP8_ENC_ERROR_LAST ? "unknown" : kErrorEncMessages[picture.error_code];
+		RXA_SERIES(frm, 1) = (void*)(picture.error_code >= VP8_ENC_ERROR_LAST ? "unknown" : kErrorEncMessages[picture.error_code]);
 	}
 	WebPMemoryWriterClear(&memory_writer);
 	WebPFree(picture.extra_info);
@@ -199,7 +199,7 @@ COMMAND cmd_decode(RXIFRM *frm, void *ctx) {
 
 	// Report an error if any
 ErrorStatus:
-	RXA_SERIES(frm, 1) = status >= VP8_DEC_ERROR_LAST ? "unknown" : kErrorDecMessages[status];
+	RXA_SERIES(frm, 1) = (void*)(status >= VP8_DEC_ERROR_LAST ? "unknown" : kErrorDecMessages[status]);
 	return RXR_ERROR;
 }
 

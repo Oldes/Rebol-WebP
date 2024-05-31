@@ -31,7 +31,7 @@ flag:   shared
 
 target-x86: [
 	arch: x86
-	library: %build-x86/lib/
+	#if Windows? [library: %build-x86/lib/]
 ]
 target-x64: [
 	arch: x64
@@ -40,7 +40,7 @@ target-x64: [
 		__LP64__       ; has long (integer) 64 bits
 	]
 	#if macOS?   [ flag: "-arch x86_64" ]
-	library: %build/lib/
+	#if Windows? [library: %build/lib/]
 ]
 target-arm64: [
 	arch: arm64
@@ -53,7 +53,7 @@ target-arm64: [
 	define: _FILE_OFFSET_BITS=64
 	define: __LP64__   ; has long (integer) 64 bits
 	define: __arm64__
-	library: %build/lib/
+	#if Windows? [library: %build/lib/]
 ]
 target-armv7: [
 	arch: armv7
@@ -93,7 +93,7 @@ eggs: [
 	#if (find [Linux OpenBSD FreeBSD NetBSD DragonflyBSD] system/platform) [
 		"Build libwebp libraries (cmake)" [
 			name: %libwebp
-			cmd %tmp/linux/ "cmake -G ^"Unix Makefiles^" ../../libwebp/ -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_BUILD_TYPE=Release -DINSTALL_CREATE_DISTRIB=OFF"
+			cmd %tmp/linux/ "cmake -G ^"Unix Makefiles^" ../../libwebp/ -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_BUILD_TYPE=Release -DINSTALL_CREATE_DISTRIB=OFF"
 			cmd %tmp/linux/ "sudo make install -j8"
 		]
 	]
@@ -130,7 +130,8 @@ eggs: [
 	#if macOS? [
 		"Build libwebp libraries (cmake)" [
 			name: %libwebp
-			cmd %tmp/macos/ "cmake ../../libwebp/ -DCMAKE_BUILD_TYPE=Release -DINSTALL_CREATE_DISTRIB=OFF"
+			;@@ CWEBP utility is turned off, because there is some error when it's being compiled!
+			cmd %tmp/macos/ "cmake ../../libwebp/ -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DWEBP_BUILD_CWEBP=OFF -DCMAKE_BUILD_TYPE=Release -DINSTALL_CREATE_DISTRIB=OFF"
 			cmd %tmp/macos/ "cmake --build . --config release -j 8"
 			cmd %tmp/macos/ "cmake --build . --target install --config release"
 		]
