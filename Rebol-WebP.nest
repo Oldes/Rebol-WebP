@@ -1,0 +1,166 @@
+;-    .-.                                                                       
+;-   /'v'\   SISKIN-Builder project file                                        
+;-  (/uOu\)  https://github.com/Siskin-framework/Builder/                       
+;-===="="=======================================================================
+
+github: @libwebp
+
+version: 1.4.0
+
+compiler: clang
+arch:     x64
+optimize: 2
+
+;define: USE_TRACES
+define: UNICODE
+define: _UNICODE
+
+;- options common for all Rebol extensions ----------------------
+flag:   shared
+
+#if Windows? [
+	define: _CRT_SECURE_NO_WARNINGS
+	define: _USE_MATH_DEFINES
+	define: TO_WINDOWS
+	upx:    on
+	strip:  on
+]
+#if Linux? [
+	compiler: gcc
+]
+
+target-x86: [
+	arch: x86
+	library: %build-x86/lib/
+]
+target-x64: [
+	arch: x64
+	defines: [
+		_FILE_OFFSET_BITS=64
+		__LP64__       ; has long (integer) 64 bits
+	]
+	#if macOS?   [ flag: "-arch x86_64" ]
+	library: %build/lib/
+]
+target-arm64: [
+	arch: arm64
+	#if Linux? [
+		flag: "-arch arm64"
+	]
+	#if macOS? [
+		flag: "-target arm64-apple-darwin"
+	]
+	define: _FILE_OFFSET_BITS=64
+	define: __LP64__   ; has long (integer) 64 bits
+	define: __arm64__
+	library: %build/lib/
+]
+target-armv7: [
+	arch: armv7
+	flag: "-march=armv7"
+]
+;----------------------------------------------------------------
+
+#if macOS? [
+	sign: on
+]
+#if Linux? [
+	cflags: -fPIC
+]
+
+make-extension: [
+	;- generate main extension header --------------------------------
+	do %src/webp-rebol-extension.r3 
+
+	files: [
+		%src/webp-commands.c
+		%src/webp-commands-table.c
+		%src/webp-rebol-extension.c
+	]
+	#if posix? [
+		include: %/usr/local/include/
+		library: %/usr/local/lib/
+		library: %webp
+		library: %sharpyuv
+	]
+	#if Windows? [
+		include: %build/include/
+		include: %libwebp/
+	]
+]
+
+eggs: [
+	#if (find [Linux OpenBSD FreeBSD NetBSD DragonflyBSD] system/platform) [
+		"Build libwebp libraries (cmake)" [
+			name: %libwebp
+			cmd %tmp/linux/ "cmake -G ^"Unix Makefiles^" ../../libwebp/ -DCMAKE_C_COMPILER=/usr/bin/gcc -DCMAKE_CXX_COMPILER=/usr/bin/g++ -DCMAKE_BUILD_TYPE=Release -DINSTALL_CREATE_DISTRIB=OFF"
+			cmd %tmp/linux/ "sudo make install -j8"
+		]
+	]
+	#if Windows? [
+		"Build libwebp libraries (cmake) x86" [
+			name: %libwebp-x86
+			cmd %tmp/x86/ "cmake ../../libwebp/ -A Win32 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=..\..\build-x86\  -DINSTALL_CREATE_DISTRIB=OFF"
+			cmd %tmp/x86/ "cmake --build . --config release -j 8"
+			cmd %tmp/x86/ "cmake --build . --target install --config release"
+		]
+		"Build libwebp libraries (cmake) x64" [
+			name: %libwebp-x64
+			cmd %tmp/x64/ "cmake ../../libwebp/ -A x64 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=..\..\build\ -DINSTALL_CREATE_DISTRIB=OFF"
+			cmd %tmp/x64/ "cmake --build . --config release -j 8"
+			cmd %tmp/x64/ "cmake --build . --target install --config release"
+		]
+		"Rebol WebP extension: win32_x86" [
+			name: %webp-windows-x86.rebx
+			:target-x86
+			:make-extension
+			library: %build-x86/lib/libwebp
+			library: %build-x86/lib/libsharpyuv
+			library: %build-x86/lib/libwebpdemux
+		]
+		"Rebol WebP extension: win32_x64" [
+			name: %webp-windows-x64.rebx
+			:target-x64
+			:make-extension
+			library: %build/lib/libwebp
+			library: %build/lib/libsharpyuv
+			library: %build/lib/libwebpdemux
+		]
+	]
+	#if macOS? [
+		"Build libwebp libraries (cmake)" [
+			name: %libwebp
+			cmd %tmp/macos/ "cmake ../../libwebp/ -DCMAKE_BUILD_TYPE=Release -DINSTALL_CREATE_DISTRIB=OFF"
+			cmd %tmp/macos/ "cmake --build . --config release -j 8"
+			cmd %tmp/macos/ "cmake --build . --target install --config release"
+		]
+		"Rebol WebP extension: macos_x64" [
+			name: %webp-macos-x64
+			:make-extension
+			:target-x64
+		]
+		"Rebol WebP extension: macos_arm64" [
+			name: %webp-macos-arm64
+			:make-extension
+			:target-arm64
+		]
+	]
+	#if Linux? [
+		"Rebol WebP extension:linux_x64" [
+			name: %webp-linux-x64
+			:make-extension
+			:target-x64
+		]
+		"Rebol WebP extension: linux_arm64" [
+			name: %webp-linux-arm64
+			:make-extension
+			:target-arm64
+		]
+		"Rebol WebP extension: linux_armv7" [
+			name: %webp-linux-armv7
+			:make-extension
+			:target-armv7
+		]
+	]
+]
+

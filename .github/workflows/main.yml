@@ -1,0 +1,84 @@
+name: 'Rebol-WebP CI'
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+#  push:
+#    branches: [ master ]
+#  pull_request:
+#    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Siskin Builder
+      uses: oldes/install-siskin@v0.17.0
+
+    - name: Build WebP libraries
+      run: ./siskin Rebol-WebP.nest libwebp-x64
+
+    - name: Build 64bit Rebol WebP extension
+      run: ./siskin Rebol-WebP.nest webp-windows-x64.rebx
+
+    - name: Install Rebol for extension test
+      uses: oldes/install-rebol@v3.17.0
+      with:
+        product: Bulk # used `resize` in tests
+
+    - name: Test extension
+      run:  ./rebol3.exe test.r3
+
+    ###############################################################################
+    # Collecting build artifacts...
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Rebol-WebP-Windows-${{github.run_id}}
+        path: ./build/*
+
+  linux:
+    strategy:
+      fail-fast: true
+    runs-on: ubuntu-20.04
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install Siskin Builder
+      uses: oldes/install-siskin@v0.17.0
+
+    - name: Build and install WebP libraries
+      run: ./siskin Rebol-WebP.nest libwebp
+
+    - name: Build 64bit Rebol WebP extension
+      run: ./siskin Rebol-WebP.nest -o ./build/webp-linux-x64.rebx webp-linux-x64
+
+    - name: Setup library location
+      run: |
+        sudo ldconfig /usr/local/lib
+        sudo ldconfig -v
+        ldd -v ./build/webp-linux-x64.rebx
+
+    - name: Install Rebol for extension test
+      uses: oldes/install-rebol@v3.17.0
+      with:
+        product: Bulk # used `resize` in tests
+
+    - name: Test extension
+      run:  ./rebol3 test.r3
+
+    ###############################################################################
+    # Collecting build artifacts...
+
+    - name: Compress Rebol/WebP extension
+      run:  gzip -9 ./build/webp-linux-x64.rebx
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: Rebol-WebP-Linux-${{github.run_id}}
+        path: ./build/*
