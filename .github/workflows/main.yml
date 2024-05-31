@@ -27,7 +27,7 @@ jobs:
       run: ./siskin Rebol-WebP.nest libwebp-x64
 
     - name: Build 64bit Rebol WebP extension
-      run: ./siskin Rebol-WebP.nest webp-windows-x64.rebx
+      run: ./siskin Rebol-WebP.nest --msvc webp-windows-x64.rebx
 
     - name: Install Rebol for extension test
       uses: oldes/install-rebol@v3.17.0
@@ -35,7 +35,7 @@ jobs:
         product: Bulk # used `resize` in tests
 
     - name: Test extension
-      run:  ./rebol3.exe test.r3
+      run:  ./rebol3.exe ci-test.r3
 
     ###############################################################################
     # Collecting build artifacts...
@@ -74,7 +74,7 @@ jobs:
         product: Bulk # used `resize` in tests
 
     - name: Test extension
-      run:  ./rebol3 test.r3
+      run:  ./rebol3 ci-test.r3
 
     ###############################################################################
     # Collecting build artifacts...
