@@ -1,9 +1,9 @@
 REBOL [
 	title:  "Rebol/WebP module builder"
 	type:    module
-	date:    31-May-2024
+	date:    2-Jun-2024
 	home:    https://github.com/Oldes/Rebol-WebP
-	version: 1.4.0
+	version: 1.4.0.1
 	author: @Oldes
 ]
 
@@ -21,6 +21,17 @@ commands: [
 	config: [
 		"Set codec's parameters. They can be useful to better balance the trade-off between compression efficiency and processing time."
 		spec [word! block!] "Preset name (photo, picture, drawing, icon, text) or block with parameters"
+	]
+
+	anim-encoder: [
+		"Initialize a new WebP Image Encoder"
+		size [pair!] "Size of the output"
+	]
+	encode-frame: [
+		"Encode an image into a WebPAnimEncoder object"
+		encoder [handle!] "WebPAnimEncoder object to which the frame is to be added"
+		time  [time!]  "Timestamp of this frame"
+		image [image! none!] "Rebol image to be added. If none, the animation will be assembled into a binary."
 	]
 ]
 
@@ -90,7 +101,7 @@ arg-words: unique arg-words
 reb-code: ajoin [
 	"REBOL [Title: {Rebol WebP Codec Extension} "
 	"Type: module "
-	"Version: 1.4.0.0 "
+	"Version: 1.4.0.1 "
 	"Needs: 3.14.1 "
 	"Home:  https://github.com/Oldes/Rebol-WebP "
 	"]"
@@ -187,6 +198,7 @@ header: {$logo
 #include "rebol-extension.h"
 #include "webp/encode.h"
 #include "webp/decode.h"
+#include "webp/mux.h"
 
 #define SERIES_TEXT(s)   ((char*)SERIES_DATA(s))
 
@@ -199,6 +211,8 @@ header: {$logo
 extern u32* arg_words;
 extern u32* type_words;
 extern u32* hint_words;
+
+extern REBCNT Handle_WebPAnimEncoder;
 
 enum ext_commands {$enu-commands
 };
@@ -223,7 +237,7 @@ typedef int (*MyCommandPointer)(RXIFRM *frm, void *ctx);
 
 #define APPEND_STRING(str, ...) \
 	len = snprintf(NULL,0,__VA_ARGS__);\
-	if (len > SERIES_REST(str)-SERIES_LEN(str)) {\
+	if (len > (int)(SERIES_REST(str)-SERIES_LEN(str))) {\
 		RL_EXPAND_SERIES(str, SERIES_TAIL(str), len);\
 		SERIES_TAIL(str) -= len;\
 	}\

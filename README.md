@@ -28,6 +28,16 @@ Decode a WebP image into a Rebol image
 Set codec's parameters. They can be useful to better balance the trade-off between compression efficiency and processing time.
 * `spec` `[word! block!]` Preset name (photo, picture, drawing, icon, text) or block with parameters
 
+#### `anim-encoder` `:size`
+Initialize a new WebP Image Encoder
+* `size` `[pair!]` Size of the output
+
+#### `encode-frame` `:encoder` `:time` `:image`
+Encode an image into a WebPAnimEncoder object
+* `encoder` `[handle!]` WebPAnimEncoder object to which the frame is to be added
+* `time` `[time!]` Timestamp of this frame
+* `image` `[image! none!]` Rebol image to be added. If none, the animation will be assembled into a binary.
+
 
 ## Other extension values:
 ```rebol

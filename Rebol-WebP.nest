@@ -81,6 +81,7 @@ make-extension: [
 		include: %/usr/local/include/
 		library: %/usr/local/lib/
 		library: %webp
+		library: %webpmux
 		library: %sharpyuv
 	]
 	#if Windows? [
@@ -116,7 +117,7 @@ eggs: [
 			:make-extension
 			library: %build-x86/lib/libwebp
 			library: %build-x86/lib/libsharpyuv
-			library: %build-x86/lib/libwebpdemux
+			library: %build-x86/lib/libwebpmux
 		]
 		"Rebol WebP extension: win32_x64" [
 			name: %webp-windows-x64
@@ -124,7 +125,7 @@ eggs: [
 			:make-extension
 			library: %build/lib/libwebp
 			library: %build/lib/libsharpyuv
-			library: %build/lib/libwebpdemux
+			library: %build/lib/libwebpmux
 		]
 	]
 	#if macOS? [

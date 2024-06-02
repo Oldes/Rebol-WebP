@@ -28,6 +28,51 @@ webp: import webp
 
 ;; do some test with the extension
 
+test-animation: function [][
+    random/seed 2
+    size: 480x480 ;; output size
+    center: size / 2
+
+    enc: webp/anim-encoder size
+    if not handle? enc [
+        print as-purple "Failed to initialize WebPAnimEncoder handle!"
+        return false
+    ]
+
+    ;; import Blend2D extension used for drawing...
+    import blend2d
+
+
+    ;; destination image...
+    img: make image! size
+    fish: premultiply load %fish.png
+    fish-size: fish/size
+
+    frames: 30
+    frame-time: 0:0:0
+    time-increment: 0.1
+
+    background: 255.255.255
+    offset: center - (fish-size / 2) - 25x25
+
+    loop frames [
+        ;; draw some content...
+        pos: offset + random 50x50
+        draw img [
+            ;; clear all with the background color
+            fill :background fill-all
+            ;; draw an image
+            image :fish :pos
+        ]
+        ;; add frame to the animation...
+        webp/encode-frame :enc :frame-time img
+        ;; update time ...
+        frame-time: frame-time + time-increment
+    ]
+    ;; save the final animation...
+    write %anim.webp webp/encode-frame :enc :frame-time none
+]
+
 unless all [
     print as-yellow "Loading PNG image using a codec..."
     probe image?  try [img: load %fish.png]
@@ -56,10 +101,14 @@ unless all [
     probe image?  try [img: webp/decode bin]
     print as-yellow "Loading WebP image using a codec..."
     probe image?  try [img: load %out.webp]
-    ;view img
+    
+    print as-yellow "Test WebPAnimEncoder..."
+    probe file?   try [test-animation]
 ][
     print as-purple "Some test failed!"
     quit/return 1
 ]
+
+
 print as-green "DONE"
 

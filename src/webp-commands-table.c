@@ -15,4 +15,6 @@ MyCommandPointer Command[] = {
 	cmd_encode,
 	cmd_decode,
 	cmd_config,
+	cmd_anim_encoder,
+	cmd_encode_frame,
 };

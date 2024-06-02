@@ -20,9 +20,19 @@ u32* arg_words;
 u32* type_words;
 u32* hint_words;
 
+REBCNT Handle_WebPAnimEncoder;
+
 //============================================================================//
 
 static const char* init_block = WEBP_EXT_INIT_CODE;
+
+int Common_mold(REBHOB *hob, REBSER *ser);
+
+int WebPAnimEncoder_free(void* hndl);
+int WebPAnimEncoder_get_path(REBHOB *hob, REBCNT word, REBCNT *type, RXIARG *arg);
+int WebPAnimEncoder_set_path(REBHOB *hob, REBCNT word, REBCNT *type, RXIARG *arg);
+
+
 
 RXIEXT const char *RX_Init(int opts, RL_LIB *lib) {
 	RL = lib;
@@ -52,6 +62,16 @@ RXIEXT const char *RX_Init(int opts, RL_LIB *lib) {
 				 (sharpyuv_version >> 24) & 0xff, (sharpyuv_version >> 16) & 0xffff,
 				 sharpyuv_version & 0xff);
 #endif
+
+	REBHSP spec;
+	spec.mold = Common_mold;
+
+	spec.size      = sizeof(void*);
+	spec.flags     = HANDLE_REQUIRES_HOB_ON_FREE;
+	spec.free      = WebPAnimEncoder_free;
+	spec.get_path  = WebPAnimEncoder_get_path;
+	spec.set_path  = WebPAnimEncoder_set_path;
+	Handle_WebPAnimEncoder = RL_REGISTER_HANDLE_SPEC((REBYTE*)"WebPAnimEncoder", &spec);
 
 	return init_block;
 }

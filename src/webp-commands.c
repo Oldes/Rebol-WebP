@@ -25,8 +25,11 @@ Stopwatch stop_watch;
 #include "webp-output.inc"
 
 #define COMMAND int
+#define FRM_IS_HANDLE(n, t)     (RXA_TYPE(frm,n) == RXT_HANDLE && RXA_HANDLE_TYPE(frm, n) == t && IS_USED_HOB(RXA_HANDLE_CONTEXT(frm, n)))
 #define ARG_Is_None(n)          (RXA_TYPE(frm,n) == RXT_NONE)
 #define ARG_Is_Word(n)          (RXA_TYPE(frm,n) == RXT_WORD)
+#define ARG_Is_WebPAnimEncoder(n) FRM_IS_HANDLE(n, Handle_WebPAnimEncoder)
+#define ARG_WebPAnimEncoder(n)    (WebPAnimEncoder*)(RXA_HANDLE_CONTEXT(frm, n)->handle)
 #define RETURN_ERROR(err)  do {RXA_SERIES(frm, 1) = err; return RXR_ERROR;} while(0)
 
 #ifndef MIN
@@ -38,6 +41,35 @@ Stopwatch stop_watch;
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))
 #endif
 #endif
+
+
+int Common_mold(REBHOB *hob, REBSER *str) {
+	int len;
+	if (!str) return 0;
+	SERIES_TAIL(str) = 0;
+	APPEND_STRING(str, "0#%lx", (unsigned long)(uintptr_t)hob->data);
+	return len;
+}
+
+
+int WebPAnimEncoder_free(void* hndl) {
+	REBHOB *hob;
+	WebPAnimEncoder *enc;
+	if (!hndl) return 0;
+	hob = (REBHOB *)hndl;
+	enc = (WebPAnimEncoder *)hob->handle;
+	WebPAnimEncoderDelete(enc);
+	MARK_HOB(hob);
+	return 0;
+}
+
+int WebPAnimEncoder_get_path(REBHOB *hob, REBCNT word, REBCNT *type, RXIARG *arg) {
+	//TODO....
+	return PE_BAD_SELECT;
+}
+int WebPAnimEncoder_set_path(REBHOB *hob, REBCNT word, REBCNT *type, RXIARG *arg) {
+	return PE_BAD_SET;
+}
 
 
 COMMAND cmd_webp_init(RXIFRM *frm, void *ctx) {
@@ -442,4 +474,75 @@ COMMAND cmd_config(RXIFRM *frm, void *ctx) {
 	}
 
 	return RXR_TRUE;
+}
+
+
+COMMAND cmd_anim_encoder(RXIFRM *frm, void *ctx) {
+	REBHOB* hob = NULL;
+	WebPAnimEncoderOptions enc_options;
+	WebPAnimEncoder* enc;
+	int width  = (int)RXA_PAIR(frm,1).x;
+	int height = (int)RXA_PAIR(frm,1).y;
+
+	if (width <=0 || height <= 0)
+		RETURN_ERROR("Invalid size used to initialize a WebPAnimEncoder");
+
+	WebPAnimEncoderOptionsInit(&enc_options);
+
+	enc = WebPAnimEncoderNew(width, height, &enc_options);
+	if (!enc) return RXR_NONE;
+
+	hob = RL_MAKE_HANDLE_CONTEXT(Handle_WebPAnimEncoder);
+	if (hob == NULL) return RXR_NONE;
+
+	hob->handle = (void*)enc;
+
+	RXA_HANDLE(frm, 1)       = hob;
+	RXA_HANDLE_TYPE(frm, 1)  = hob->sym;
+	RXA_HANDLE_FLAGS(frm, 1) = hob->flags;
+	RXA_TYPE(frm, 1) = RXT_HANDLE;
+
+	return RXR_VALUE;
+}
+
+COMMAND cmd_encode_frame(RXIFRM *frm, void *ctx) {
+	WebPAnimEncoder* enc;
+	WebPPicture frame;
+
+	if (!ARG_Is_WebPAnimEncoder(1))
+		RETURN_ERROR("Expected handle of type: WebPAnimEncoder");
+
+	enc = ARG_WebPAnimEncoder(1);
+	int time = (int)(RXA_TIME(frm,2) / 1000000L);
+	
+	if (ARG_Is_None(3)) {
+		WebPData webp_data;
+
+		if (!WebPAnimEncoderAdd(enc, NULL, time, &config)) goto Error;
+
+		WebPAnimEncoderAssemble(enc, &webp_data);
+
+		REBSER *ser = (REBSER *)RL_MAKE_STRING((REBLEN)webp_data.size, FALSE);
+		memcpy(ser->data, webp_data.bytes, webp_data.size);
+		RXA_TYPE(frm, 1) = RXT_BINARY;
+		RXA_ARG(frm, 1).series  = ser;
+		RXA_ARG(frm, 1).index = 0;
+		SERIES_TAIL(ser) = (REBLEN)webp_data.size;
+		return RXR_VALUE;
+	}
+	
+	WebPPictureInit(&frame);
+
+	frame.use_argb = 1;
+	frame.argb   = (uint32_t*)SERIES_DATA((REBSER *)RXA_ARG(frm,3).image);
+	frame.width  = RXA_IMAGE_WIDTH(frm, 3);
+	frame.height = RXA_IMAGE_HEIGHT(frm, 3);
+	frame.argb_stride = frame.width;
+
+	if (!WebPAnimEncoderAdd(enc, &frame, time, &config)) goto Error;
+ 
+	return RXR_TRUE;
+Error:
+	RXA_SERIES(frm, 1) = (void*)WebPAnimEncoderGetError(enc);
+	return RXR_ERROR;
 }
