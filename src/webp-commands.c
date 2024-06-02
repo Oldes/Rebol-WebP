@@ -29,7 +29,7 @@ Stopwatch stop_watch;
 #define ARG_Is_None(n)          (RXA_TYPE(frm,n) == RXT_NONE)
 #define ARG_Is_Word(n)          (RXA_TYPE(frm,n) == RXT_WORD)
 #define ARG_Is_WebPAnimEncoder(n) FRM_IS_HANDLE(n, Handle_WebPAnimEncoder)
-#define ARG_WebPAnimEncoder(n)    (WebPAnimEncoder*)(RXA_HANDLE_CONTEXT(frm, n)->handle)
+#define ARG_WebPAnimEncoder(n)    ((WebPAnimEncoderWrapper*)(RXA_HANDLE_CONTEXT(frm, n)->handle))->encoder
 #define RETURN_ERROR(err)  do {RXA_SERIES(frm, 1) = err; return RXR_ERROR;} while(0)
 
 #ifndef MIN
@@ -57,9 +57,11 @@ int WebPAnimEncoder_free(void* hndl) {
 	WebPAnimEncoder *enc;
 	if (!hndl) return 0;
 	hob = (REBHOB *)hndl;
-	enc = (WebPAnimEncoder *)hob->handle;
+	if (!hob->data) return 0;
+	enc = ((WebPAnimEncoderWrapper*)hob->data)->encoder;
+	if (!enc) return 0;
 	WebPAnimEncoderDelete(enc);
-	MARK_HOB(hob);
+	UNMARK_HOB(hob);
 	return 0;
 }
 
@@ -484,18 +486,16 @@ COMMAND cmd_anim_encoder(RXIFRM *frm, void *ctx) {
 	int width  = (int)RXA_PAIR(frm,1).x;
 	int height = (int)RXA_PAIR(frm,1).y;
 
-	if (width <=0 || height <= 0)
-		RETURN_ERROR("Invalid size used to initialize a WebPAnimEncoder");
-
 	WebPAnimEncoderOptionsInit(&enc_options);
 
+	// The encoder is allocated from the WebP library!
 	enc = WebPAnimEncoderNew(width, height, &enc_options);
 	if (!enc) return RXR_NONE;
 
 	hob = RL_MAKE_HANDLE_CONTEXT(Handle_WebPAnimEncoder);
 	if (hob == NULL) return RXR_NONE;
-
-	hob->handle = (void*)enc;
+	// So it must be storred in a wrapper (so Rebol don't try to free it)
+	((WebPAnimEncoderWrapper*)hob->data)->encoder = enc;
 
 	RXA_HANDLE(frm, 1)       = hob;
 	RXA_HANDLE_TYPE(frm, 1)  = hob->sym;

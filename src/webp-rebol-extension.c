@@ -66,7 +66,7 @@ RXIEXT const char *RX_Init(int opts, RL_LIB *lib) {
 	REBHSP spec;
 	spec.mold = Common_mold;
 
-	spec.size      = sizeof(void*);
+	spec.size      = sizeof(WebPAnimEncoderWrapper);
 	spec.flags     = HANDLE_REQUIRES_HOB_ON_FREE;
 	spec.free      = WebPAnimEncoder_free;
 	spec.get_path  = WebPAnimEncoder_get_path;

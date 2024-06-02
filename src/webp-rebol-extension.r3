@@ -214,6 +214,12 @@ extern u32* hint_words;
 
 extern REBCNT Handle_WebPAnimEncoder;
 
+// The encoder is allocated from the WebP library
+// so it must be wrapped inside another struct!
+typedef struct WebPAnimEncoderWrapper {
+	WebPAnimEncoder* encoder;
+} WebPAnimEncoderWrapper;
+
 enum ext_commands {$enu-commands
 };
 
