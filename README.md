@@ -12,6 +12,15 @@ webp/config 'drawing               ;; use preset for drawing image
 webp/config [verbose: 3]           ;; maximum output verbosity
 save %out.webp make image! 640x480 ;; save some image into a file encoded using WebP codec
 ```
+Making an animated WebP file:
+```rebol
+enc: webp/anim-encoder 480x480     ;; initialize an encoder
+;; encode 2 images (both visible 1s)
+webp/encode-frame :enc 0:0:0 make image!  480x480          ;; white image
+webp/encode-frame :enc 0:0:1 make image! [480x480 255.0.0] ;;   red image
+;; write result into a file (when no image is used, the animation is assebled)
+write %anim.webp webp/encode-frame :enc 0:0:2 none
+```
 
 ## Extension commands:
 
